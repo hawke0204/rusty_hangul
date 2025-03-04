@@ -43,8 +43,7 @@ mod tests {
   #[test]
   fn test_normalize_from_u32() {
     let test_cases = ['릴'];
-    let Nfd(choseong_code, jungseong_code, jongseong_code) =
-      Nfd::normalize_from_u32(test_cases[0] as u32);
+    let Nfd(choseong_code, jungseong_code, jongseong_code) = Nfd::normalize(test_cases[0] as u32);
 
     assert_eq!(choseong_code, 4357);
     assert_eq!(jungseong_code, 4469);

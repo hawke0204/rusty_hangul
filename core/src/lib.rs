@@ -7,7 +7,7 @@ mod utils;
 
 #[cfg(test)]
 mod tests {
-  use decompose::Decompose;
+  use crate::decompose::Decompose;
 
   #[test]
   fn test_decompose() {
