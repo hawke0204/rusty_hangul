@@ -1,4 +1,4 @@
-use crate::utils::is_jungseong_from_u32;
+use crate::utils::is_conjoining_jungseong_from_u32;
 
 #[derive(Debug)]
 pub struct Jungseong {
@@ -14,7 +14,7 @@ impl Jungseong {
   }
 
   fn new_from_u32(unicode: u32) -> Self {
-    if !is_jungseong_from_u32(unicode) {
+    if !is_conjoining_jungseong_from_u32(unicode) {
       panic!()
     }
 
@@ -74,7 +74,7 @@ mod tests {
   #[test]
   fn test_jungseong() {
     let letter = '궐';
-    let Nfd(_, jungseong_code, _) = Nfd::normalize(letter as u32);
+    let Nfd(_, jungseong_code, _) = Nfd::normalize(letter as u32).unwrap();
     let jungseong = Jungseong::new_from_u32(jungseong_code);
 
     assert_eq!(
@@ -86,7 +86,7 @@ mod tests {
       "ㅜㅓ"
         .chars()
         // Mac OS에서 글자 하나의 자음마다 0x1FEE 값 만큼 더해지는 버그가 있다.
-        .map(|c| if is_jungseong_from_u32(c as u32) {
+        .map(|c| if is_conjoining_jungseong_from_u32(c as u32) {
           c as u32
         } else {
           c as u32 - 0x1FEE

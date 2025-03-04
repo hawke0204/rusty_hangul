@@ -1,4 +1,4 @@
-use crate::utils::is_jongseong_from_u32;
+use crate::utils::is_conjoining_jongseong_from_u32;
 
 #[derive(Debug)]
 pub struct Jongseong {
@@ -14,7 +14,7 @@ impl Jongseong {
   }
 
   fn maybe_new_from_u32(unicode: u32) -> Option<Self> {
-    if !is_jongseong_from_u32(unicode) {
+    if !is_conjoining_jongseong_from_u32(unicode) {
       return None;
     }
 
@@ -82,7 +82,7 @@ mod tests {
     use crate::nfd::Nfd;
 
     let letter = '궑';
-    let Nfd(_, _, jongseong_code) = Nfd::normalize(letter as u32);
+    let Nfd(_, _, jongseong_code) = Nfd::normalize(letter as u32).unwrap();
     if let Some(jongseong_code) = jongseong_code {
       let jongseong = Jongseong::maybe_new(jongseong_code).unwrap();
 

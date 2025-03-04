@@ -82,7 +82,8 @@ impl DecomposedHangul {
       return None;
     }
 
-    let Nfd(choseong_code, jungseong_code, jongseong_code) = Nfd::normalize(letter);
+    let normalized = Nfd::normalize(letter).ok()?;
+    let Nfd(choseong_code, jungseong_code, jongseong_code) = normalized;
     let choseong = Choseong::new(choseong_code);
     let jungseong = Jungseong::new(jungseong_code);
 

@@ -1,4 +1,4 @@
-use crate::utils::is_choseong_from_u32;
+use crate::utils::is_conjoining_choseong_from_u32;
 
 #[derive(Debug)]
 pub struct Choseong {
@@ -14,7 +14,7 @@ impl Choseong {
   }
 
   fn new_from_u32(unicode: u32) -> Self {
-    if !is_choseong_from_u32(unicode) {
+    if !is_conjoining_choseong_from_u32(unicode) {
       panic!()
     }
 
@@ -38,7 +38,7 @@ mod tests {
     use crate::nfd::Nfd;
 
     let letter = '궑';
-    let Nfd(choseong_code, _, _) = Nfd::normalize(letter as u32);
+    let Nfd(choseong_code, _, _) = Nfd::normalize(letter as u32).unwrap();
     let choseong = Choseong::new_from_u32(choseong_code);
 
     assert_eq!(choseong.unicode, 0x1100);
