@@ -13,7 +13,7 @@ const JONGSEONG_BASE: u32 = 0x11A8;
 
 const JUNGSEONG_AND_JONGSEONG_NUMBER_OF_CASES: u32 = JUNGSEONG_COUNT * JONGSEONG_COUNT;
 
-pub struct Nfd(pub u32, pub u32, pub Option<u32>);
+pub struct NFD(pub u32, pub u32, pub Option<u32>);
 
 #[derive(Debug)]
 pub enum NormalizeError {
@@ -30,13 +30,9 @@ impl fmt::Display for NormalizeError {
 
 impl Error for NormalizeError {}
 
-impl Nfd {
+impl NFD {
   pub fn normalize(letter_unicode: u32) -> Result<Self, NormalizeError> {
-    Self::normalize_from_u32(letter_unicode)
-  }
-
-  fn normalize_from_u32(letter_unicode: u32) -> Result<Self, NormalizeError> {
-    if !super::utils::is_complete_hangul_from_u32(letter_unicode) {
+    if !super::utils::is_complete_hangul(letter_unicode) {
       return Err(NormalizeError::InvalidHangul);
     }
 
@@ -64,9 +60,9 @@ mod tests {
 
   #[test]
   fn test_normalize_from_u32() {
-    let result = Nfd::normalize('릴' as u32);
+    let result = NFD::normalize('릴' as u32);
     match result {
-      Ok(Nfd(choseong_code, jungseong_code, jongseong_code)) => {
+      Ok(NFD(choseong_code, jungseong_code, jongseong_code)) => {
         assert_eq!(choseong_code, 4357);
         assert_eq!(jungseong_code, 4469);
         assert_eq!(jongseong_code, Some(4527));
@@ -80,7 +76,7 @@ mod tests {
     let invalid_inputs = ['a', '1', '@', 'Z', 'ㄱ', 'ㅏ', 'ㄴ', '\u{3200}'];
 
     for input in invalid_inputs {
-      match Nfd::normalize(input as u32) {
+      match NFD::normalize(input as u32) {
         Ok(_) => panic!(
           "Expected Err variant for invalid hangul character: {}",
           input
@@ -102,8 +98,8 @@ mod tests {
     ];
 
     for (input, expected) in test_cases {
-      match Nfd::normalize(input) {
-        Ok(Nfd(cho, jung, jong)) => {
+      match NFD::normalize(input) {
+        Ok(NFD(cho, jung, jong)) => {
           assert_eq!(
             (cho, jung, jong),
             expected,
