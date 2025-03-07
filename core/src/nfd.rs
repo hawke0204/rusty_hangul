@@ -3,7 +3,7 @@ use std::fmt;
 
 const HANGUL_BASE: u32 = 0xAC00;
 
-const CHOSEONG_COUNT: u32 = 0x13;
+// const CHOSEONG_COUNT: u32 = 0x13;
 const JUNGSEONG_COUNT: u32 = 0x15;
 const JONGSEONG_COUNT: u32 = 0x1C;
 
