@@ -4,5 +4,5 @@ mod jungseong;
 mod nfd;
 mod utils;
 
+pub mod hangul;
 pub mod hangul_char;
-pub mod hangul_sentence;
