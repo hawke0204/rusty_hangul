@@ -1,12 +1,10 @@
 use crate::hangul_char::HangulChar;
 
-#[derive(Debug)]
 struct CharUnit {
   original: char,
   hangul: Option<HangulChar>,
 }
 
-#[derive(Debug)]
 pub struct Hangul {
   char_units: Vec<CharUnit>,
   original: String,
@@ -18,7 +16,7 @@ impl Hangul {
       .chars()
       .map(|ch| CharUnit {
         original: ch,
-        hangul: HangulChar::new(ch),
+        hangul: HangulChar::parse_from_char(ch),
       })
       .collect();
 
@@ -56,7 +54,7 @@ impl Hangul {
       .char_units
       .iter()
       .map(|unit| match &unit.hangul {
-        Some(hangul) => hangul.get_choseong().to_string(),
+        Some(hangul) => hangul.choseong.compatibility_value.to_string(),
         None => unit.original.to_string(),
       })
       .collect()
@@ -77,8 +75,6 @@ mod tests {
   #[test]
   fn test_mixed_sentence() {
     let sentence = Hangul::new("Hello 안녕!");
-
-    println!("{:?}", sentence);
 
     assert_eq!(sentence.len(), 9);
     assert_eq!(sentence.original(), "Hello 안녕!");

@@ -31,12 +31,12 @@ impl fmt::Display for NormalizeError {
 impl Error for NormalizeError {}
 
 impl NFD {
-  pub fn normalize(letter_unicode: u32) -> Result<Self, NormalizeError> {
-    if !super::utils::is_complete_hangul(letter_unicode) {
+  pub fn normalize(nfc_letter_unicode: u32) -> Result<Self, NormalizeError> {
+    if !super::utils::is_complete_hangul(nfc_letter_unicode) {
       return Err(NormalizeError::InvalidHangul);
     }
 
-    let hangul_code = letter_unicode - HANGUL_BASE;
+    let hangul_code = nfc_letter_unicode - HANGUL_BASE;
 
     let choseong_index = hangul_code / (JUNGSEONG_AND_JONGSEONG_NUMBER_OF_CASES);
     let jungseong_index = (hangul_code % JUNGSEONG_AND_JONGSEONG_NUMBER_OF_CASES) / JONGSEONG_COUNT;

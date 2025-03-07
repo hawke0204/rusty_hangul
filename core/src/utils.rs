@@ -12,6 +12,19 @@ pub fn is_compatibility_jamo(unicode: u32) -> bool {
   COMPAT_JAMO_BASE <= unicode && unicode <= COMPAT_JAMO_LAST
 }
 
+// NFC 정규화된 한글 확인
+pub fn is_nfc_hangul(string: &str) -> bool {
+  let mut chars = string.chars();
+
+  if chars.clone().count() != 1 {
+    return false;
+  }
+
+  let unicode = chars.next().unwrap() as u32;
+
+  is_complete_hangul(unicode)
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;
