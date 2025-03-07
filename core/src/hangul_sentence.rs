@@ -7,12 +7,12 @@ struct CharUnit {
 }
 
 #[derive(Debug)]
-pub struct HangulSentence {
+pub struct Hangul {
   char_units: Vec<CharUnit>,
   original: String,
 }
 
-impl HangulSentence {
+impl Hangul {
   pub fn new(text: &str) -> Self {
     let char_units = text
       .chars()
@@ -69,14 +69,14 @@ mod tests {
 
   #[test]
   fn test_hangul_sentence_creation() {
-    let sentence = HangulSentence::new("안녕하세요");
+    let sentence = Hangul::new("안녕하세요");
     assert_eq!(sentence.len(), 5);
     assert_eq!(sentence.original(), "안녕하세요");
   }
 
   #[test]
   fn test_mixed_sentence() {
-    let sentence = HangulSentence::new("Hello 안녕!");
+    let sentence = Hangul::new("Hello 안녕!");
 
     println!("{:?}", sentence);
 
@@ -86,23 +86,23 @@ mod tests {
 
   #[test]
   fn test_disassemble() {
-    let sentence = HangulSentence::new("안녕");
+    let sentence = Hangul::new("안녕");
     assert_eq!(sentence.disassemble(), "ㅇㅏㄴㄴㅕㅇ");
   }
 
   #[test]
   fn test_empty_sentence() {
-    let sentence = HangulSentence::new("");
+    let sentence = Hangul::new("");
     assert!(sentence.is_empty());
     assert_eq!(sentence.len(), 0);
   }
 
   #[test]
   fn test_get_choseong() {
-    let sentence = HangulSentence::new("안녕하세요");
+    let sentence = Hangul::new("안녕하세요");
     assert_eq!(sentence.get_choseong(), "ㅇㄴㅎㅅㅇ");
 
-    let mixed = HangulSentence::new("Hello 안녕!");
+    let mixed = Hangul::new("Hello 안녕!");
     assert_eq!(mixed.get_choseong(), "Hello ㅇㄴ!");
   }
 }
