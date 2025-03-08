@@ -1,9 +1,14 @@
 use std::error::Error;
 use std::fmt;
 
+use crate::choseong::Choseong;
+use crate::jongseong::Jongseong;
+use crate::jungseong::Jungseong;
+use crate::nfc::NFC;
+
 const HANGUL_BASE: u32 = 0xAC00;
 
-const CHOSEONG_COUNT: u32 = 0x13;
+// const CHOSEONG_COUNT: u32 = 0x13;
 const JUNGSEONG_COUNT: u32 = 0x15;
 const JONGSEONG_COUNT: u32 = 0x1C;
 
@@ -31,12 +36,12 @@ impl fmt::Display for NormalizeError {
 impl Error for NormalizeError {}
 
 impl NFD {
-  pub fn normalize(letter_unicode: u32) -> Result<Self, NormalizeError> {
-    if !super::utils::is_complete_hangul(letter_unicode) {
+  pub fn normalize(nfc_letter_unicode: u32) -> Result<Self, NormalizeError> {
+    if !NFC::is_complete_hangul(nfc_letter_unicode) {
       return Err(NormalizeError::InvalidHangul);
     }
 
-    let hangul_code = letter_unicode - HANGUL_BASE;
+    let hangul_code = nfc_letter_unicode - HANGUL_BASE;
 
     let choseong_index = hangul_code / (JUNGSEONG_AND_JONGSEONG_NUMBER_OF_CASES);
     let jungseong_index = (hangul_code % JUNGSEONG_AND_JONGSEONG_NUMBER_OF_CASES) / JONGSEONG_COUNT;
@@ -51,6 +56,35 @@ impl NFD {
     };
 
     Ok(Self(choseong, jungseong, jongseong))
+  }
+
+  pub fn is_nfd_hangul(string: &str) -> bool {
+    let chars: Vec<char> = string.chars().collect();
+    let chars_len = chars.len();
+
+    if chars_len != 2 && chars_len != 3 {
+      return false;
+    }
+
+    let choseong_unicode = chars[0] as u32;
+    let jungseong_unicode = chars[1] as u32;
+
+    if !Choseong::is_conjoining_choseong(choseong_unicode) {
+      return false;
+    }
+
+    if !Jungseong::is_conjoining_jungseong(jungseong_unicode) {
+      return false;
+    }
+
+    if chars_len == 3 {
+      let jongseong_unicode = chars[2] as u32;
+      if !Jongseong::is_conjoining_jongseong(jongseong_unicode) {
+        return false;
+      }
+    }
+
+    true
   }
 }
 
@@ -110,5 +144,20 @@ mod tests {
         Err(e) => panic!("Normalization failed for U+{:04X} with error: {}", input, e),
       }
     }
+  }
+
+  #[test]
+  fn test_is_nfd_hangul() {
+    // 유효한 NFD 문자열
+    assert!(NFD::is_nfd_hangul("가")); // 가
+    assert!(NFD::is_nfd_hangul("넌")); // 넌
+    assert!(NFD::is_nfd_hangul("한")); // 한
+
+    // 유효하지 않은 NFD 문자열
+    assert!(!NFD::is_nfd_hangul("가")); // NFC
+    assert!(!NFD::is_nfd_hangul("ᄀ")); // 초성만
+    assert!(!NFD::is_nfd_hangul("간ᄀ")); // 4자
+    assert!(!NFD::is_nfd_hangul("abc")); // 영문
+    assert!(!NFD::is_nfd_hangul("ㄱㅏ")); // 호환형 자모
   }
 }

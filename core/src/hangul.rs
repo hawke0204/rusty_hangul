@@ -1,30 +1,29 @@
-use crate::hangul_char::HangulChar;
+use crate::hangul_letter::HangulLetter;
 
-#[derive(Debug)]
 struct CharUnit {
   original: char,
-  hangul: Option<HangulChar>,
+  hangul: Option<HangulLetter>,
 }
 
-#[derive(Debug)]
-pub struct HangulSentence {
+pub struct Hangul {
   char_units: Vec<CharUnit>,
   original: String,
 }
 
-impl HangulSentence {
-  pub fn new(text: &str) -> Self {
-    let char_units = text
+// TODO: NFD 지원
+impl Hangul {
+  pub fn new(string: &str) -> Self {
+    let char_units = string
       .chars()
       .map(|ch| CharUnit {
         original: ch,
-        hangul: HangulChar::new(ch),
+        hangul: HangulLetter::parse_from_char(ch),
       })
       .collect();
 
     Self {
       char_units,
-      original: text.to_string(),
+      original: string.to_string(),
     }
   }
 
@@ -56,7 +55,7 @@ impl HangulSentence {
       .char_units
       .iter()
       .map(|unit| match &unit.hangul {
-        Some(hangul) => hangul.get_choseong().to_string(),
+        Some(hangul) => hangul.choseong.compatibility_value.to_string(),
         None => unit.original.to_string(),
       })
       .collect()
@@ -69,16 +68,14 @@ mod tests {
 
   #[test]
   fn test_hangul_sentence_creation() {
-    let sentence = HangulSentence::new("안녕하세요");
+    let sentence = Hangul::new("안녕하세요");
     assert_eq!(sentence.len(), 5);
     assert_eq!(sentence.original(), "안녕하세요");
   }
 
   #[test]
   fn test_mixed_sentence() {
-    let sentence = HangulSentence::new("Hello 안녕!");
-
-    println!("{:?}", sentence);
+    let sentence = Hangul::new("Hello 안녕!");
 
     assert_eq!(sentence.len(), 9);
     assert_eq!(sentence.original(), "Hello 안녕!");
@@ -86,23 +83,23 @@ mod tests {
 
   #[test]
   fn test_disassemble() {
-    let sentence = HangulSentence::new("안녕");
+    let sentence = Hangul::new("안녕");
     assert_eq!(sentence.disassemble(), "ㅇㅏㄴㄴㅕㅇ");
   }
 
   #[test]
   fn test_empty_sentence() {
-    let sentence = HangulSentence::new("");
+    let sentence = Hangul::new("");
     assert!(sentence.is_empty());
     assert_eq!(sentence.len(), 0);
   }
 
   #[test]
   fn test_get_choseong() {
-    let sentence = HangulSentence::new("안녕하세요");
+    let sentence = Hangul::new("안녕하세요");
     assert_eq!(sentence.get_choseong(), "ㅇㄴㅎㅅㅇ");
 
-    let mixed = HangulSentence::new("Hello 안녕!");
+    let mixed = Hangul::new("Hello 안녕!");
     assert_eq!(mixed.get_choseong(), "Hello ㅇㄴ!");
   }
 }

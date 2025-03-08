@@ -1,5 +1,3 @@
-use crate::utils::is_compatibility_jamo;
-
 // 조합형 초성 범위
 const CHOSEONG_BASE: u32 = 0x1100;
 const CHOSEONG_LAST: u32 = 0x1112;
