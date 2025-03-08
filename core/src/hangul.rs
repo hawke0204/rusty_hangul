@@ -1,8 +1,8 @@
-use crate::hangul_char::HangulChar;
+use crate::hangul_letter::HangulLetter;
 
 struct CharUnit {
   original: char,
-  hangul: Option<HangulChar>,
+  hangul: Option<HangulLetter>,
 }
 
 pub struct Hangul {
@@ -10,19 +10,20 @@ pub struct Hangul {
   original: String,
 }
 
+// TODO: NFD 지원
 impl Hangul {
-  pub fn new(text: &str) -> Self {
-    let char_units = text
+  pub fn new(string: &str) -> Self {
+    let char_units = string
       .chars()
       .map(|ch| CharUnit {
         original: ch,
-        hangul: HangulChar::parse_from_char(ch),
+        hangul: HangulLetter::parse_from_char(ch),
       })
       .collect();
 
     Self {
       char_units,
-      original: text.to_string(),
+      original: string.to_string(),
     }
   }
 
