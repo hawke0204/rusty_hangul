@@ -1,0 +1,9 @@
+[package]
+name = "rusty_hangul_benchmark"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+indicatif = "0.17.11"
+hangul = { path = "../core" }
+rand = "0.8.5"

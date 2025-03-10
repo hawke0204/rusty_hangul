@@ -1,4 +1,4 @@
 [workspace]
 resolver = "2"
-members = ["core"]
+members = ["benchmark", "core"]
 default-members = ["core"]
