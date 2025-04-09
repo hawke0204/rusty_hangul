@@ -12,8 +12,16 @@ mod tests {
 
   #[test]
   fn test_compatibility_jamo() {
-    assert!(is_compatibility_jamo('ㄱ' as u32)); // U+3131
-    assert!(is_compatibility_jamo('ㅏ' as u32)); // U+314F
-    assert!(!is_compatibility_jamo('가' as u32)); // U+AC00
+    assert!(is_compatibility_jamo('ㄱ' as u32));
+    assert!(is_compatibility_jamo('ㄴ' as u32));
+    assert!(is_compatibility_jamo('ㅏ' as u32));
+    assert!(is_compatibility_jamo('ㅣ' as u32));
+    assert!(is_compatibility_jamo('ㅥ' as u32));
+    assert!(is_compatibility_jamo('ㆎ' as u32));
+
+    assert!(!is_compatibility_jamo('가' as u32));
+    assert!(!is_compatibility_jamo('a' as u32));
+    assert!(!is_compatibility_jamo('1' as u32));
+    assert!(!is_compatibility_jamo('ᄀ' as u32));
   }
 }

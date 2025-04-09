@@ -97,6 +97,117 @@ mod tests {
   use super::*;
 
   #[test]
+  fn test_is_conjoining_jungseong() {
+    assert!(Jungseong::is_conjoining_jungseong(0x1161));
+    assert!(Jungseong::is_conjoining_jungseong(0x1175));
+
+    assert!(Jungseong::is_conjoining_jungseong(JUNGSEONG_BASE));
+    assert!(Jungseong::is_conjoining_jungseong(JUNGSEONG_LAST));
+
+    assert!(!Jungseong::is_conjoining_jungseong(0x1160));
+    assert!(!Jungseong::is_conjoining_jungseong(0x1176));
+    assert!(!Jungseong::is_conjoining_jungseong(0x314F));
+  }
+
+  #[test]
+  fn test_is_compatibility_jungseong() {
+    assert!(Jungseong::is_compatibility_jungseong(0x314F));
+    assert!(Jungseong::is_compatibility_jungseong(0x3163));
+
+    assert!(Jungseong::is_compatibility_jungseong(COMPAT_JUNGSEONG_BASE));
+    assert!(Jungseong::is_compatibility_jungseong(COMPAT_JUNGSEONG_LAST));
+
+    assert!(!Jungseong::is_compatibility_jungseong(0x314E));
+    assert!(!Jungseong::is_compatibility_jungseong(0x3164));
+    assert!(!Jungseong::is_compatibility_jungseong(0x1161));
+  }
+
+  #[test]
+  fn test_compatibility_to_conjoining_jungseong() {
+    assert_eq!(
+      Jungseong::compatibility_to_conjoining_jungseong(0x314F),
+      Some(0x1161)
+    );
+    assert_eq!(
+      Jungseong::compatibility_to_conjoining_jungseong(0x3163),
+      Some(0x1175)
+    );
+
+    assert_eq!(
+      Jungseong::compatibility_to_conjoining_jungseong(COMPAT_JUNGSEONG_BASE),
+      Some(JUNGSEONG_BASE)
+    );
+    assert_eq!(
+      Jungseong::compatibility_to_conjoining_jungseong(COMPAT_JUNGSEONG_LAST),
+      Some(JUNGSEONG_LAST)
+    );
+
+    assert_eq!(
+      Jungseong::compatibility_to_conjoining_jungseong(0x1161),
+      None
+    );
+    assert_eq!(
+      Jungseong::compatibility_to_conjoining_jungseong(0x3164),
+      None
+    );
+  }
+
+  #[test]
+  fn test_conjoining_jungseong_to_compatibility() {
+    assert_eq!(
+      Jungseong::conjoining_jungseong_to_compatibility(0x1161),
+      Some(0x314F)
+    );
+    assert_eq!(
+      Jungseong::conjoining_jungseong_to_compatibility(0x1175),
+      Some(0x3163)
+    );
+
+    assert_eq!(
+      Jungseong::conjoining_jungseong_to_compatibility(JUNGSEONG_BASE),
+      Some(COMPAT_JUNGSEONG_BASE)
+    );
+    assert_eq!(
+      Jungseong::conjoining_jungseong_to_compatibility(JUNGSEONG_LAST),
+      Some(COMPAT_JUNGSEONG_LAST)
+    );
+
+    assert_eq!(
+      Jungseong::conjoining_jungseong_to_compatibility(0x314F),
+      None
+    );
+    assert_eq!(
+      Jungseong::conjoining_jungseong_to_compatibility(0x1160),
+      None
+    );
+    assert_eq!(
+      Jungseong::conjoining_jungseong_to_compatibility(0x1176),
+      None
+    );
+  }
+
+  #[test]
+  fn test_jungseong_new() {
+    let jungseong = Jungseong::new(0x1161);
+    assert_eq!(jungseong.conjoining_unicode, 0x1161);
+    assert_eq!(jungseong.conjoining_value, 'ᅡ');
+    assert_eq!(jungseong.compatibility_unicode, 0x314F);
+    assert_eq!(jungseong.compatibility_value, 'ㅏ');
+
+    let jungseong = Jungseong::new(0x314F);
+    assert_eq!(jungseong.conjoining_unicode, 0x1161);
+    assert_eq!(jungseong.conjoining_value, 'ᅡ');
+    assert_eq!(jungseong.compatibility_unicode, 0x314F);
+    assert_eq!(jungseong.compatibility_value, 'ㅏ');
+  }
+
+  #[test]
+  #[should_panic(expected = "유효한 중성 유니코드가 아닙니다")]
+  fn test_jungseong_invalid_unicode() {
+    Jungseong::new(0x3131);
+  }
+
+  #[test]
   fn test_jungseong_conversion() {
     let jungseong = Jungseong::new('ᅡ' as u32);
     assert_eq!(jungseong.conjoining_unicode, 0x1161);

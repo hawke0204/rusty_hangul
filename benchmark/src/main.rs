@@ -1,4 +1,4 @@
-use hangul::hangul::Hangul;
+use hangul::Hangul;
 use indicatif::{ProgressBar, ProgressStyle};
 use std::time::Instant;
 

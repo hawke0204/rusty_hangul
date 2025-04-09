@@ -67,31 +67,55 @@ mod tests {
   use super::*;
 
   #[test]
-  fn test_hangul_sentence_creation() {
+  fn test_create_hangul() {
     let sentence = Hangul::new("안녕하세요");
     assert_eq!(sentence.len(), 5);
     assert_eq!(sentence.original(), "안녕하세요");
+
+    let mixed = Hangul::new("Hello 안녕!");
+    assert_eq!(mixed.len(), 9);
+    assert_eq!(mixed.original(), "Hello 안녕!");
+
+    let empty = Hangul::new("");
+    assert!(empty.is_empty());
+    assert_eq!(empty.len(), 0);
+    assert_eq!(empty.original(), "");
   }
 
   #[test]
-  fn test_mixed_sentence() {
-    let sentence = Hangul::new("Hello 안녕!");
+  fn test_original() {
+    let sentence = Hangul::new("안녕하세요");
+    assert_eq!(sentence.original(), "안녕하세요");
 
-    assert_eq!(sentence.len(), 9);
-    assert_eq!(sentence.original(), "Hello 안녕!");
+    let special = Hangul::new("특수문자!@#");
+    assert_eq!(special.original(), "특수문자!@#");
+  }
+
+  #[test]
+  fn test_len_and_is_empty() {
+    let sentence = Hangul::new("안녕하세요");
+    assert_eq!(sentence.len(), 5);
+    assert!(!sentence.is_empty());
+
+    let empty = Hangul::new("");
+    assert_eq!(empty.len(), 0);
+    assert!(empty.is_empty());
+
+    let mixed = Hangul::new("A한글1");
+    assert_eq!(mixed.len(), 4);
+    assert!(!mixed.is_empty());
   }
 
   #[test]
   fn test_disassemble() {
     let sentence = Hangul::new("안녕");
     assert_eq!(sentence.disassemble(), "ㅇㅏㄴㄴㅕㅇ");
-  }
 
-  #[test]
-  fn test_empty_sentence() {
-    let sentence = Hangul::new("");
-    assert!(sentence.is_empty());
-    assert_eq!(sentence.len(), 0);
+    let mixed = Hangul::new("안녕 Hello");
+    assert_eq!(mixed.disassemble(), "ㅇㅏㄴㄴㅕㅇ Hello");
+
+    let special = Hangul::new("안녕!");
+    assert_eq!(special.disassemble(), "ㅇㅏㄴㄴㅕㅇ!");
   }
 
   #[test]
@@ -101,5 +125,8 @@ mod tests {
 
     let mixed = Hangul::new("Hello 안녕!");
     assert_eq!(mixed.get_choseong(), "Hello ㅇㄴ!");
+
+    let empty = Hangul::new("");
+    assert_eq!(empty.get_choseong(), "");
   }
 }

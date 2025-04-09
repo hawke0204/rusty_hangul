@@ -94,41 +94,17 @@ mod tests {
 
   #[test]
   fn test_normalize_from_u32() {
-    let result = NFD::normalize('릴' as u32);
-    match result {
-      Ok(NFD(choseong_code, jungseong_code, jongseong_code)) => {
-        assert_eq!(choseong_code, 4357);
-        assert_eq!(jungseong_code, 4469);
-        assert_eq!(jongseong_code, Some(4527));
-      }
-      Err(_) => panic!("Expected Ok variant for valid hangul character"),
-    }
-  }
-
-  #[test]
-  fn test_normalize_invalid_inputs() {
-    let invalid_inputs = ['a', '1', '@', 'Z', 'ㄱ', 'ㅏ', 'ㄴ', '\u{3200}'];
-
-    for input in invalid_inputs {
-      match NFD::normalize(input as u32) {
-        Ok(_) => panic!(
-          "Expected Err variant for invalid hangul character: {}",
-          input
-        ),
-        Err(e) => assert!(matches!(e, NormalizeError::InvalidHangul)),
-      }
-    }
-  }
-
-  #[test]
-  fn test_normalize_various_syllables() {
     let test_cases = [
-      (0xAC00, (0x1100, 0x1161, None)),         // 가
-      (0xB178, (0x1102, 0x1169, None)),         // 노
-      (0xB2EC, (0x1103, 0x1161, Some(0x11AF))), // 달
-      (0xB9E8, (0x1106, 0x1162, Some(0x11AB))), // 맨
-      (0xBD93, (0x1107, 0x116E, Some(0x11BA))), // 붓
-      (0xD55C, (0x1112, 0x1161, Some(0x11AB))), // 한
+      (0xAC00, (0x1100, 0x1161, None)),
+      (0xB098, (0x1102, 0x1161, None)),
+      (0xB2E4, (0x1103, 0x1161, None)),
+      (0xB77C, (0x1105, 0x1161, None)),
+      (0xAC01, (0x1100, 0x1161, Some(0x11A8))),
+      (0xB2EC, (0x1103, 0x1161, Some(0x11AF))),
+      (0xB9E8, (0x1106, 0x1162, Some(0x11AB))),
+      (0xBD93, (0x1107, 0x116E, Some(0x11BA))),
+      (0xD55C, (0x1112, 0x1161, Some(0x11AB))),
+      (0xD7A3, (0x1112, 0x1175, Some(0x11C2))),
     ];
 
     for (input, expected) in test_cases {
@@ -147,17 +123,51 @@ mod tests {
   }
 
   #[test]
-  fn test_is_nfd_hangul() {
-    // 유효한 NFD 문자열
-    assert!(NFD::is_nfd_hangul("가")); // 가
-    assert!(NFD::is_nfd_hangul("넌")); // 넌
-    assert!(NFD::is_nfd_hangul("한")); // 한
+  fn test_normalize_invalid_inputs() {
+    let invalid_inputs = [
+      'a' as u32,
+      '1' as u32,
+      '@' as u32,
+      'ㄱ' as u32,
+      'ㅏ' as u32,
+      0x1100,
+      0x1161,
+      0x11A8,
+      0x3200,
+      0xABFF,
+      0xD7A4,
+    ];
 
-    // 유효하지 않은 NFD 문자열
-    assert!(!NFD::is_nfd_hangul("가")); // NFC
-    assert!(!NFD::is_nfd_hangul("ᄀ")); // 초성만
-    assert!(!NFD::is_nfd_hangul("간ᄀ")); // 4자
-    assert!(!NFD::is_nfd_hangul("abc")); // 영문
-    assert!(!NFD::is_nfd_hangul("ㄱㅏ")); // 호환형 자모
+    for input in invalid_inputs {
+      match NFD::normalize(input) {
+        Ok(_) => panic!("Expected Err variant for invalid input: U+{:04X}", input),
+        Err(e) => assert!(matches!(e, NormalizeError::InvalidHangul)),
+      }
+    }
+  }
+
+  #[test]
+  fn test_is_nfd_hangul() {
+    let nfd_ga = "\u{1100}\u{1161}";
+    let nfd_no = "\u{1102}\u{1169}";
+    let nfd_dal = "\u{1103}\u{1161}\u{11AF}";
+    let nfd_man = "\u{1106}\u{1162}\u{11AB}";
+    let nfd_han = "\u{1112}\u{1161}\u{11AB}";
+
+    assert!(NFD::is_nfd_hangul(nfd_ga));
+    assert!(NFD::is_nfd_hangul(nfd_no));
+    assert!(NFD::is_nfd_hangul(nfd_dal));
+    assert!(NFD::is_nfd_hangul(nfd_man));
+    assert!(NFD::is_nfd_hangul(nfd_han));
+
+    assert!(!NFD::is_nfd_hangul("가"));
+    assert!(!NFD::is_nfd_hangul("ᄀ"));
+    assert!(!NFD::is_nfd_hangul("ᅡ"));
+    assert!(!NFD::is_nfd_hangul("ᄀ가"));
+    assert!(!NFD::is_nfd_hangul("가ᅡ"));
+    assert!(!NFD::is_nfd_hangul("갈ᆫ"));
+    assert!(!NFD::is_nfd_hangul("abc"));
+    assert!(!NFD::is_nfd_hangul("ㄱㅏ"));
+    assert!(!NFD::is_nfd_hangul(""));
   }
 }

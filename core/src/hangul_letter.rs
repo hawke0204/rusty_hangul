@@ -56,10 +56,13 @@ impl HangulLetter {
   }
 
   pub fn disassemble(&self) -> String {
-    let jongseong_compatibility_value = self
-      .jongseong
-      .as_ref()
-      .map_or(String::new(), |j| j.compatibility_value.to_string());
+    let jongseong_compatibility_value = self.jongseong.as_ref().map_or(String::new(), |j| {
+      if j.is_complex_jongseong() {
+        j.decompose_complex_jongseong().iter().collect::<String>()
+      } else {
+        j.compatibility_value.to_string()
+      }
+    });
 
     format!(
       "{}{}{}",
@@ -79,53 +82,7 @@ mod tests {
   use super::*;
 
   #[test]
-  fn test_hangul_decomposition() {
-    let hangul = HangulLetter::parse_from_char('한').unwrap();
-
-    // 유니코드 검증
-    assert_eq!(hangul.unicode[0], 0xD55C);
-
-    // 초성 검증
-    assert_eq!(hangul.choseong.conjoining_value, 'ᄒ');
-    assert_eq!(hangul.choseong.compatibility_value, 'ㅎ');
-
-    // 중성 검증
-    assert_eq!(hangul.jungseong.conjoining_value, 'ᅡ');
-    assert_eq!(hangul.jungseong.compatibility_value, 'ㅏ');
-
-    // 종성 검증
-    let jongseong = hangul.jongseong.unwrap();
-    assert_eq!(jongseong.conjoining_value, 'ᆫ');
-    assert_eq!(jongseong.compatibility_value, 'ㄴ');
-  }
-
-  #[test]
-  fn test_compatibility_value() {
-    let hangul = HangulLetter::parse_from_char('한').unwrap();
-    assert_eq!(hangul.disassemble(), "ㅎㅏㄴ");
-
-    let hangul = HangulLetter::parse_from_char('가').unwrap();
-    assert_eq!(hangul.disassemble(), "ㄱㅏ");
-  }
-
-  #[test]
-  fn test_invalid_hangul() {
-    assert!(HangulLetter::parse_from_char('a').is_none());
-    assert!(HangulLetter::parse_from_char('ㄱ').is_none());
-  }
-
-  #[test]
-  fn test_has_batchim() {
-    let hangul = HangulLetter::parse_from_char('한').unwrap();
-    assert!(hangul.has_batchim());
-
-    let hangul = HangulLetter::parse_from_char('하').unwrap();
-    assert!(!hangul.has_batchim());
-  }
-
-  #[test]
   fn test_parse_nfc_hangul() {
-    // 초성+중성만 있는 경우
     let hangul = HangulLetter::parse("가").unwrap();
     assert_eq!(hangul.value, "가");
     assert_eq!(hangul.unicode, vec![0xAC00]);
@@ -133,41 +90,45 @@ mod tests {
     assert_eq!(hangul.jungseong.compatibility_value, 'ㅏ');
     assert!(hangul.jongseong.is_none());
 
-    // 초성+중성+종성이 있는 경우
-    let hangul = HangulLetter::parse("곻").unwrap();
-    assert_eq!(hangul.value, "곻");
-    assert_eq!(hangul.choseong.compatibility_value, 'ㄱ');
-    assert_eq!(hangul.jungseong.compatibility_value, 'ㅗ');
-    assert_eq!(hangul.jongseong.unwrap().compatibility_value, 'ㅎ');
+    let hangul = HangulLetter::parse("한").unwrap();
+    assert_eq!(hangul.value, "한");
+    assert_eq!(hangul.unicode, vec![0xD55C]);
+    assert_eq!(hangul.choseong.compatibility_value, 'ㅎ');
+    assert_eq!(hangul.jungseong.compatibility_value, 'ㅏ');
+    assert_eq!(hangul.jongseong.unwrap().compatibility_value, 'ㄴ');
 
-    // 쌍자음이 초성인 경우
     let hangul = HangulLetter::parse("쌍").unwrap();
     assert_eq!(hangul.value, "쌍");
     assert_eq!(hangul.choseong.compatibility_value, 'ㅆ');
     assert_eq!(hangul.jungseong.compatibility_value, 'ㅏ');
     assert_eq!(hangul.jongseong.unwrap().compatibility_value, 'ㅇ');
 
-    // 복합 모음인 경우
     let hangul = HangulLetter::parse("귀").unwrap();
     assert_eq!(hangul.value, "귀");
     assert_eq!(hangul.choseong.compatibility_value, 'ㄱ');
     assert_eq!(hangul.jungseong.compatibility_value, 'ㅟ');
     assert!(hangul.jongseong.is_none());
+
+    let hangul = HangulLetter::parse("값").unwrap();
+    assert_eq!(hangul.value, "값");
+    assert_eq!(hangul.choseong.compatibility_value, 'ㄱ');
+    assert_eq!(hangul.jungseong.compatibility_value, 'ㅏ');
+    assert_eq!(hangul.jongseong.unwrap().compatibility_value, 'ㅄ');
   }
 
   #[test]
   fn test_parse_nfd_hangul() {
-    // 초성+중성만 있는 경우
-    let hangul = HangulLetter::parse("가").unwrap();
-    assert_eq!(hangul.value, "가");
+    let nfd_ga = "\u{1100}\u{1161}";
+    let hangul = HangulLetter::parse(nfd_ga).unwrap();
+    assert_eq!(hangul.value, nfd_ga);
     assert_eq!(hangul.unicode, vec![0x1100, 0x1161]);
     assert_eq!(hangul.choseong.compatibility_value, 'ㄱ');
     assert_eq!(hangul.jungseong.compatibility_value, 'ㅏ');
     assert!(hangul.jongseong.is_none());
 
-    // 초성+중성+종성이 있는 경우
-    let hangul = HangulLetter::parse("한").unwrap();
-    assert_eq!(hangul.value, "한");
+    let nfd_han = "\u{1112}\u{1161}\u{11AB}";
+    let hangul = HangulLetter::parse(nfd_han).unwrap();
+    assert_eq!(hangul.value, nfd_han);
     assert_eq!(hangul.unicode, vec![0x1112, 0x1161, 0x11AB]);
     assert_eq!(hangul.choseong.compatibility_value, 'ㅎ');
     assert_eq!(hangul.jungseong.compatibility_value, 'ㅏ');
@@ -175,26 +136,55 @@ mod tests {
   }
 
   #[test]
-  fn test_parse_invalid_input() {
-    // 영문자
+  fn test_parse_from_char() {
+    let hangul = HangulLetter::parse_from_char('한').unwrap();
+    assert_eq!(hangul.value, "한");
+    assert_eq!(hangul.unicode, vec![0xD55C]);
+
+    assert!(HangulLetter::parse_from_char('a').is_none());
+    assert!(HangulLetter::parse_from_char('ㄱ').is_none());
+    assert!(HangulLetter::parse_from_char('!').is_none());
+  }
+
+  #[test]
+  fn test_disassemble() {
+    let hangul = HangulLetter::parse("가").unwrap();
+    assert_eq!(hangul.disassemble(), "ㄱㅏ");
+
+    let hangul = HangulLetter::parse("한").unwrap();
+    assert_eq!(hangul.disassemble(), "ㅎㅏㄴ");
+
+    let hangul = HangulLetter::parse("의").unwrap();
+    assert_eq!(hangul.disassemble(), "ㅇㅢ");
+
+    let hangul = HangulLetter::parse("값").unwrap();
+    assert_eq!(hangul.disassemble(), "ㄱㅏㅂㅅ");
+  }
+
+  #[test]
+  fn test_has_batchim() {
+    assert!(HangulLetter::parse("한").unwrap().has_batchim());
+    assert!(HangulLetter::parse("값").unwrap().has_batchim());
+
+    assert!(!HangulLetter::parse("가").unwrap().has_batchim());
+    assert!(!HangulLetter::parse("뉘").unwrap().has_batchim());
+  }
+
+  #[test]
+  fn test_invalid_input() {
     assert!(HangulLetter::parse("a").is_none());
 
-    // 한글 자음/모음
     assert!(HangulLetter::parse("ㄱ").is_none());
     assert!(HangulLetter::parse("ㅏ").is_none());
 
-    // 부적절한 조합
-    assert!(HangulLetter::parse("ᄀᄀ").is_none()); // 초성+초성
-    assert!(HangulLetter::parse("ᅡᅡ").is_none()); // 중성+중성
-    assert!(HangulLetter::parse("ᄀᆫ").is_none()); // 초성+종성
+    assert!(HangulLetter::parse("ᄀᄀ").is_none());
+    assert!(HangulLetter::parse("ᅡᅡ").is_none());
+    assert!(HangulLetter::parse("ᄀᆫ").is_none());
 
-    // 빈 문자열
     assert!(HangulLetter::parse("").is_none());
 
-    // 특수문자
     assert!(HangulLetter::parse("!").is_none());
 
-    // 다중 문자
     assert!(HangulLetter::parse("가나").is_none());
   }
 }
