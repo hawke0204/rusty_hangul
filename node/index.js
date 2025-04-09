@@ -310,7 +310,6 @@ if (!nativeBinding) {
   throw new Error(`Failed to load native binding`)
 }
 
-const { hangulDisassemble, hangulGetChoseong } = nativeBinding
+const { Hangul } = nativeBinding
 
-module.exports.hangulDisassemble = hangulDisassemble
-module.exports.hangulGetChoseong = hangulGetChoseong
+module.exports.Hangul = Hangul
