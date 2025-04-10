@@ -188,6 +188,12 @@ $RECYCLE.BIN/
 
 # End of https://www.toptal.com/developers/gitignore/api/windows
 
+# WebAssembly
+wasm/pkg
+*.wasm
+*.wasm.d.ts
+*.js.map
+
 # Rust/Cargo
 Cargo.lock
 

@@ -1,0 +1,7 @@
+{
+	"name": "rusty_hangul",
+	"version": "0.0.0",
+	"private": true,
+	"workspaces": ["node", "wasm"],
+	"packageManager": "yarn@4.8.1"
+}
