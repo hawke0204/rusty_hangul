@@ -13,13 +13,14 @@ pub struct Hangul {
 // TODO: NFD 지원
 impl Hangul {
   pub fn new(string: &str) -> Self {
-    let char_units = string
-      .chars()
-      .map(|ch| CharUnit {
+    let mut char_units = Vec::with_capacity(string.chars().count());
+
+    for ch in string.chars() {
+      char_units.push(CharUnit {
         original: ch,
         hangul: HangulLetter::parse_from_char(ch),
-      })
-      .collect();
+      });
+    }
 
     Self {
       char_units,
@@ -40,25 +41,37 @@ impl Hangul {
   }
 
   pub fn disassemble(&self) -> String {
-    self
-      .char_units
-      .iter()
-      .map(|unit| match &unit.hangul {
-        Some(hangul) => hangul.disassemble(),
-        None => unit.original.to_string(),
-      })
-      .collect()
+    if self.is_empty() {
+      return String::new();
+    }
+
+    let mut result = String::with_capacity(self.char_units.len() * 3);
+
+    for unit in &self.char_units {
+      match &unit.hangul {
+        Some(hangul) => result.push_str(&hangul.disassemble()),
+        None => result.push(unit.original),
+      }
+    }
+
+    result
   }
 
   pub fn get_choseong(&self) -> String {
-    self
-      .char_units
-      .iter()
-      .map(|unit| match &unit.hangul {
-        Some(hangul) => hangul.choseong.compatibility_value.to_string(),
-        None => unit.original.to_string(),
-      })
-      .collect()
+    if self.is_empty() {
+      return String::new();
+    }
+
+    let mut result = String::with_capacity(self.char_units.len());
+
+    for unit in &self.char_units {
+      match &unit.hangul {
+        Some(hangul) => result.push(hangul.choseong.compatibility_value),
+        None => result.push(unit.original),
+      }
+    }
+
+    result
   }
 }
 

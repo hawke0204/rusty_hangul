@@ -22,34 +22,32 @@ pub struct Choseong {
 
 impl Choseong {
   pub fn new(unicode: u32) -> Self {
-    Self::new_inner(unicode)
-  }
+    if CHOSEONG_BASE <= unicode && unicode <= CHOSEONG_LAST {
+      let offset = unicode - CHOSEONG_BASE;
+      let compatibility_jamo = COMPATIBILITY_CHOSEONG_MAPPING[offset as usize];
 
-  fn new_inner(unicode: u32) -> Self {
-    let (conjoining_jamo, compatibility_jamo) = Self::convert_to_jamo(unicode);
-
-    let conjoining_value = unsafe { std::char::from_u32_unchecked(conjoining_jamo) };
-    let compatibility_value = unsafe { std::char::from_u32_unchecked(compatibility_jamo) };
-
-    Self {
-      conjoining_value,
-      conjoining_unicode: conjoining_jamo,
-      compatibility_value,
-      compatibility_unicode: compatibility_jamo,
-    }
-  }
-
-  fn convert_to_jamo(unicode: u32) -> (u32, u32) {
-    if Self::is_conjoining_choseong(unicode) {
-      let compatibility_jamo = Self::conjoining_choseong_to_compatibility(unicode)
-        .expect("조합형 자모를 호환형으로 변환하는데 실패했습니다");
-      return (unicode, compatibility_jamo);
+      return Self {
+        conjoining_value: unsafe { std::char::from_u32_unchecked(unicode) },
+        conjoining_unicode: unicode,
+        compatibility_value: unsafe { std::char::from_u32_unchecked(compatibility_jamo) },
+        compatibility_unicode: compatibility_jamo,
+      };
     }
 
-    if Self::is_compatibility_choseong(unicode) {
-      let conjoining_jamo = Self::compatibility_to_conjoining_choseong(unicode)
-        .expect("호환형 자모를 조합형으로 변환하는데 실패했습니다");
-      return (conjoining_jamo, unicode);
+    if COMPAT_CHOSEONG_BASE <= unicode && unicode <= COMPAT_CHOSEONG_LAST {
+      if let Some(position) = COMPATIBILITY_CHOSEONG_MAPPING
+        .iter()
+        .position(|&x| x == unicode)
+      {
+        let conjoining_jamo = CHOSEONG_BASE + position as u32;
+
+        return Self {
+          conjoining_value: unsafe { std::char::from_u32_unchecked(conjoining_jamo) },
+          conjoining_unicode: conjoining_jamo,
+          compatibility_value: unsafe { std::char::from_u32_unchecked(unicode) },
+          compatibility_unicode: unicode,
+        };
+      }
     }
 
     panic!("유효한 초성 유니코드가 아닙니다: {}", unicode);
@@ -63,26 +61,6 @@ impl Choseong {
   // 호환형 초성 확인(Compatibility Choseong)
   pub fn is_compatibility_choseong(unicode: u32) -> bool {
     COMPAT_CHOSEONG_BASE <= unicode && unicode <= COMPAT_CHOSEONG_LAST
-  }
-
-  fn conjoining_choseong_to_compatibility(choseong_code: u32) -> Option<u32> {
-    if !Self::is_conjoining_choseong(choseong_code) {
-      return None;
-    }
-
-    let offset = choseong_code - 0x1100;
-    COMPATIBILITY_CHOSEONG_MAPPING.get(offset as usize).copied()
-  }
-
-  fn compatibility_to_conjoining_choseong(compat: u32) -> Option<u32> {
-    if !Self::is_compatibility_choseong(compat) {
-      return None;
-    }
-
-    COMPATIBILITY_CHOSEONG_MAPPING
-      .iter()
-      .position(|&x| x == compat)
-      .map(|i| 0x1100 + i as u32)
   }
 }
 
@@ -119,67 +97,6 @@ mod tests {
     ));
     assert!(!Choseong::is_compatibility_choseong(0x314F));
     assert!(!Choseong::is_compatibility_choseong(0xAC00));
-  }
-
-  #[test]
-  fn test_conjoining_to_compatibility_conversion() {
-    assert_eq!(
-      Choseong::conjoining_choseong_to_compatibility(0x1100),
-      Some(0x3131)
-    );
-    assert_eq!(
-      Choseong::conjoining_choseong_to_compatibility(0x1112),
-      Some(0x314E)
-    );
-
-    assert_eq!(
-      Choseong::conjoining_choseong_to_compatibility(CHOSEONG_BASE),
-      Some(COMPAT_CHOSEONG_BASE)
-    );
-    assert_eq!(
-      Choseong::conjoining_choseong_to_compatibility(CHOSEONG_LAST),
-      Some(COMPAT_CHOSEONG_LAST)
-    );
-
-    assert_eq!(
-      Choseong::conjoining_choseong_to_compatibility(CHOSEONG_BASE - 1),
-      None
-    );
-    assert_eq!(
-      Choseong::conjoining_choseong_to_compatibility(CHOSEONG_LAST + 1),
-      None
-    );
-  }
-
-  #[test]
-  fn test_compatibility_to_conjoining_conversion() {
-    assert_eq!(
-      Choseong::compatibility_to_conjoining_choseong(0x3131),
-      Some(0x1100)
-    );
-    assert_eq!(
-      Choseong::compatibility_to_conjoining_choseong(0x314E),
-      Some(0x1112)
-    );
-
-    assert_eq!(
-      Choseong::compatibility_to_conjoining_choseong(COMPAT_CHOSEONG_BASE),
-      Some(CHOSEONG_BASE)
-    );
-    assert_eq!(
-      Choseong::compatibility_to_conjoining_choseong(COMPAT_CHOSEONG_LAST),
-      Some(CHOSEONG_LAST)
-    );
-
-    assert_eq!(
-      Choseong::compatibility_to_conjoining_choseong(COMPAT_CHOSEONG_BASE - 1),
-      None
-    );
-    assert_eq!(
-      Choseong::compatibility_to_conjoining_choseong(COMPAT_CHOSEONG_LAST + 1),
-      None
-    );
-    assert_eq!(Choseong::compatibility_to_conjoining_choseong(0x314F), None);
   }
 
   #[test]

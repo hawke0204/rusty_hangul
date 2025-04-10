@@ -23,53 +23,55 @@ pub struct Jungseong {
 }
 
 impl Jungseong {
+  #[inline]
   pub fn new(unicode: u32) -> Self {
-    Self::new_inner(unicode)
-  }
-
-  fn new_inner(unicode: u32) -> Self {
-    let (conjoining_jamo, compatibility_jamo) = Self::convert_to_jamo(unicode);
-
-    let conjoining_value = unsafe { std::char::from_u32_unchecked(conjoining_jamo) };
-    let compatibility_value = unsafe { std::char::from_u32_unchecked(compatibility_jamo) };
-
-    Self {
-      conjoining_value,
-      conjoining_unicode: conjoining_jamo,
-      compatibility_value,
-      compatibility_unicode: compatibility_jamo,
-    }
-  }
-
-  fn convert_to_jamo(unicode: u32) -> (u32, u32) {
+    // 조합형 중성 범위 확인
     if Self::is_conjoining_jungseong(unicode) {
       let conjoining_jamo = unicode;
-      let compatibility_jamo = Self::conjoining_jungseong_to_compatibility(unicode)
-        .expect("조합형 자모를 호환형으로 변환하는데 실패했습니다");
-      return (conjoining_jamo, compatibility_jamo);
+      let compatibility_jamo = COMPATIBILITY_JUNGSEONG_MAPPING[(unicode - JUNGSEONG_BASE) as usize];
+
+      return Self {
+        conjoining_value: unsafe { std::char::from_u32_unchecked(conjoining_jamo) },
+        conjoining_unicode: conjoining_jamo,
+        compatibility_value: unsafe { std::char::from_u32_unchecked(compatibility_jamo) },
+        compatibility_unicode: compatibility_jamo,
+      };
     }
 
+    // 호환형 중성 범위 확인
     if Self::is_compatibility_jungseong(unicode) {
-      let conjoining_jamo = Self::compatibility_to_conjoining_jungseong(unicode)
-        .expect("호환형 자모를 조합형으로 변환하는데 실패했습니다");
-      let compatibility_jamo = unicode;
-      return (conjoining_jamo, compatibility_jamo);
+      if let Some(position) = COMPATIBILITY_JUNGSEONG_MAPPING
+        .iter()
+        .position(|&x| x == unicode)
+      {
+        let conjoining_jamo = JUNGSEONG_BASE + position as u32;
+
+        return Self {
+          conjoining_value: unsafe { std::char::from_u32_unchecked(conjoining_jamo) },
+          conjoining_unicode: conjoining_jamo,
+          compatibility_value: unsafe { std::char::from_u32_unchecked(unicode) },
+          compatibility_unicode: unicode,
+        };
+      }
     }
 
     panic!("유효한 중성 유니코드가 아닙니다: {}", unicode)
   }
 
   // 조합형 중성 확인
+  #[inline]
   pub fn is_conjoining_jungseong(jungseong_code: u32) -> bool {
     JUNGSEONG_BASE <= jungseong_code && jungseong_code <= JUNGSEONG_LAST
   }
 
   // 호환형 중성 확인
+  #[inline]
   pub fn is_compatibility_jungseong(unicode: u32) -> bool {
     COMPAT_JUNGSEONG_BASE <= unicode && unicode <= COMPAT_JUNGSEONG_LAST
   }
 
-  fn compatibility_to_conjoining_jungseong(compat: u32) -> Option<u32> {
+  #[inline]
+  pub fn compatibility_to_conjoining_jungseong(compat: u32) -> Option<u32> {
     if !is_compatibility_jamo(compat) || !Self::is_compatibility_jungseong(compat) {
       return None;
     }
@@ -77,15 +79,16 @@ impl Jungseong {
     COMPATIBILITY_JUNGSEONG_MAPPING
       .iter()
       .position(|&x| x == compat)
-      .map(|i| 0x1161 + i as u32)
+      .map(|i| JUNGSEONG_BASE + i as u32)
   }
 
-  fn conjoining_jungseong_to_compatibility(jungseong_code: u32) -> Option<u32> {
+  #[inline]
+  pub fn conjoining_jungseong_to_compatibility(jungseong_code: u32) -> Option<u32> {
     if !Self::is_conjoining_jungseong(jungseong_code) {
       return None;
     }
 
-    let offset = jungseong_code - 0x1161;
+    let offset = jungseong_code - JUNGSEONG_BASE;
     COMPATIBILITY_JUNGSEONG_MAPPING
       .get(offset as usize)
       .copied()

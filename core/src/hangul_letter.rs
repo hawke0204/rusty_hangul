@@ -51,25 +51,38 @@ impl HangulLetter {
   }
 
   pub fn parse_from_char(nfc_char: char) -> Option<Self> {
-    let nfc_string = nfc_char.to_string();
-    Self::parse(&nfc_string)
+    if NFC::is_nfc_hangul_char(nfc_char) {
+      let unicode = nfc_char as u32;
+      let NFD(cho, jung, jong) = NFD::normalize(unicode).unwrap();
+
+      return Some(Self {
+        value: nfc_char.to_string(),
+        unicode: vec![unicode],
+        choseong: Choseong::new(cho),
+        jungseong: Jungseong::new(jung),
+        jongseong: jong.map(Jongseong::new),
+      });
+    }
+    None
   }
 
   pub fn disassemble(&self) -> String {
-    let jongseong_compatibility_value = self.jongseong.as_ref().map_or(String::new(), |j| {
-      if j.is_complex_jongseong() {
-        j.decompose_complex_jongseong().iter().collect::<String>()
-      } else {
-        j.compatibility_value.to_string()
-      }
-    });
+    let mut result = String::with_capacity(4);
 
-    format!(
-      "{}{}{}",
-      self.choseong.compatibility_value,
-      self.jungseong.compatibility_value,
-      jongseong_compatibility_value
-    )
+    result.push(self.choseong.compatibility_value);
+    result.push(self.jungseong.compatibility_value);
+
+    if let Some(ref jong) = self.jongseong {
+      if jong.is_complex_jongseong() {
+        for c in jong.decompose_complex_jongseong() {
+          result.push(c);
+        }
+      } else {
+        result.push(jong.compatibility_value);
+      }
+    }
+
+    result
   }
 
   pub fn has_batchim(&self) -> bool {
@@ -173,18 +186,13 @@ mod tests {
   #[test]
   fn test_invalid_input() {
     assert!(HangulLetter::parse("a").is_none());
-
     assert!(HangulLetter::parse("ㄱ").is_none());
     assert!(HangulLetter::parse("ㅏ").is_none());
-
     assert!(HangulLetter::parse("ᄀᄀ").is_none());
     assert!(HangulLetter::parse("ᅡᅡ").is_none());
     assert!(HangulLetter::parse("ᄀᆫ").is_none());
-
     assert!(HangulLetter::parse("").is_none());
-
     assert!(HangulLetter::parse("!").is_none());
-
     assert!(HangulLetter::parse("가나").is_none());
   }
 }

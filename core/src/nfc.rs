@@ -15,6 +15,11 @@ impl NFC {
     Self::is_complete_hangul(unicode)
   }
 
+  pub fn is_nfc_hangul_char(ch: char) -> bool {
+    let code = ch as u32;
+    (HANGUL_BASE..=HANGUL_LAST).contains(&code)
+  }
+
   pub fn is_complete_hangul(unicode: u32) -> bool {
     HANGUL_BASE <= unicode && unicode <= HANGUL_LAST
   }
