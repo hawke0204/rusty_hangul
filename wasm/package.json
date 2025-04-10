@@ -4,11 +4,8 @@
 	"description": "WebAssembly bindings for hangul library",
 	"main": "pkg/hangul.js",
 	"types": "pkg/hangul.d.ts",
-	"files": [
-		"pkg"
-	],
+	"files": ["pkg"],
 	"scripts": {
 		"build": "wasm-pack build --target web --out-dir pkg --out-name hangul"
-	},
-	"packageManager": "yarn@4.8.1"
+	}
 }
