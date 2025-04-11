@@ -7,3 +7,10 @@ edition = "2021"
 indicatif = "0.17.11"
 hangul = { path = "../core" }
 rand = "0.8.5"
+
+[dev-dependencies]
+criterion = "0.5.1"
+
+[[bench]]
+name = "hangul_benchmark"
+harness = false

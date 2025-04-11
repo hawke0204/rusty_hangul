@@ -1,8 +1,16 @@
-import { describe, bench } from "vitest";
+import { describe, bench as vitestBench } from "vitest";
 import { fakerKO as faker } from "@faker-js/faker";
 
 import { Hangul } from "../../node/index";
 import * as esHangul from "es-hangul";
+
+const benchOption = {
+	iterations: 10000,
+	time: 0,
+};
+
+const bench = (name: string, fn: () => void, options = benchOption) =>
+	vitestBench(name, fn, options);
 
 describe("한글 이름 분석", async () => {
 	const text = faker.person.fullName();
